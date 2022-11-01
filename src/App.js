@@ -7,6 +7,8 @@ import EntryLines from './components/EntryLines';
 import MainHeader from './components/MainHeader';
 import ModelEdit from './components/ModelEdit';
 import NewEntryForm from './components/NewEntryForm';
+import { legacy_createStore as createStore, combineReducers } from 'redux';
+// import { configureStore } from '@reduxjs/toolkit';
 
 function App() {
   const [entries, setEntries] = useState(initialEntries);
@@ -46,6 +48,56 @@ function App() {
     setIncomeTotal(totalIncomes);
     // eslint-disable-next-line
   }, [entries]);
+
+  function entriesReducer(state = initialEntries, action) {
+    // console.log('action: ', action);
+    let newEntries;
+    switch (action.type) {
+      case 'ADD_ENTRY':
+        newEntries = state.concat({ ...action.payload });
+        return newEntries;
+      case 'REMOVE_ENTRY':
+        newEntries = state.filter((entry) => entry.id !== action.payload.id);
+        return newEntries;
+
+      default:
+        return state;
+    }
+  }
+
+  const combinedReducers = combineReducers({
+    entries: entriesReducer,
+  });
+
+  const store = createStore(combinedReducers);
+
+  // console.log('store before: ', store.getState());
+  store.subscribe(() => {
+    console.log('store : ', store.getState());
+  });
+
+  const payload_add = {
+    id: 5,
+    description: 'Hello from Redux!',
+    value: 999,
+    isExpense: true,
+  };
+
+  const payload_remove = {
+    id: 1,
+  };
+
+  function addEntryRedux(payload) {
+    return { type: 'ADD_ENTRY', payload };
+  }
+
+  function removeEntryRedux(id) {
+    return { type: 'REMOVE_ENTRY', payload: id };
+  }
+
+  store.dispatch(addEntryRedux(payload_add));
+  store.dispatch(removeEntryRedux(payload_remove));
+  // console.log('store after: ', store.getState());
 
   function deleteEntry(id) {
     const result = entries.filter((entry) => entry.id !== id);
